@@ -1,0 +1,82 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/01/Mux16.hdl
+
+/**
+ * 16-bit multiplexor:
+ * for i = 0..15 out[i] = a[i] if sel == 0
+ *                        b[i] if sel == 1
+ */
+
+CHIP Mux16 {
+    IN a[16], b[16], sel;
+    OUT out[16];
+
+    PARTS:
+    Not(in=sel, out=negsel);
+
+    Or(a=a[0], b=sel, out=aort0); // "a or true"
+    Or(a=b[0], b=negsel, out=bort0); // "b or true"
+    And(a=aort0, b=bort0, out=out[0]);
+
+    Or(a=a[1], b=sel, out=aort1);
+    Or(a=b[1], b=negsel, out=bort1);
+    And(a=aort1, b=bort1, out=out[1]);
+
+    Or(a=a[2], b=sel, out=aort2);
+    Or(a=b[2], b=negsel, out=bort2);
+    And(a=aort2, b=bort2, out=out[2]);
+
+    Or(a=a[3], b=sel, out=aort3);
+    Or(a=b[3], b=negsel, out=bort3);
+    And(a=aort3, b=bort3, out=out[3]);
+
+    Or(a=a[4], b=sel, out=aort4);
+    Or(a=b[4], b=negsel, out=bort4);
+    And(a=aort4, b=bort4, out=out[4]);
+
+    Or(a=a[5], b=sel, out=aort5);
+    Or(a=b[5], b=negsel, out=bort5);
+    And(a=aort5, b=bort5, out=out[5]);
+
+    Or(a=a[6], b=sel, out=aort6);
+    Or(a=b[6], b=negsel, out=bort6);
+    And(a=aort6, b=bort6, out=out[6]);
+
+    Or(a=a[7], b=sel, out=aort7);
+    Or(a=b[7], b=negsel, out=bort7);
+    And(a=aort7, b=bort7, out=out[7]);
+
+    Or(a=a[8], b=sel, out=aort8);
+    Or(a=b[8], b=negsel, out=bort8);
+    And(a=aort8, b=bort8, out=out[8]);
+
+    Or(a=a[9], b=sel, out=aort9);
+    Or(a=b[9], b=negsel, out=bort9);
+    And(a=aort9, b=bort9, out=out[9]);
+
+    Or(a=a[10], b=sel, out=aort10);
+    Or(a=b[10], b=negsel, out=bort10);
+    And(a=aort10, b=bort10, out=out[10]);
+
+    Or(a=a[11], b=sel, out=aort11);
+    Or(a=b[11], b=negsel, out=bort11);
+    And(a=aort11, b=bort11, out=out[11]);
+
+    Or(a=a[12], b=sel, out=aort12);
+    Or(a=b[12], b=negsel, out=bort12);
+    And(a=aort12, b=bort12, out=out[12]);
+
+    Or(a=a[13], b=sel, out=aort13);
+    Or(a=b[13], b=negsel, out=bort13);
+    And(a=aort13, b=bort13, out=out[13]);
+
+    Or(a=a[14], b=sel, out=aort14);
+    Or(a=b[14], b=negsel, out=bort14);
+    And(a=aort14, b=bort14, out=out[14]);
+
+    Or(a=a[15], b=sel, out=aort15);
+    Or(a=b[15], b=negsel, out=bort15);
+    And(a=aort15, b=bort15, out=out[15]);
+}
