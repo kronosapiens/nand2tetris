@@ -1,4 +1,4 @@
-for file in projects/01/*.tst
+for file in projects/$1/*.tst
 do
   echo ""
   echo "$file"
