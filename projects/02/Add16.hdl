@@ -13,5 +13,6 @@ CHIP Add16 {
     OUT out[16];
 
     PARTS:
-   // Put you code here:
+    HalfAdder();
+    FullAdder();
 }
