@@ -8,7 +8,7 @@ then
   cmd="tools/CPUEmulator.sh"
   assemble=true
 else
-  cmd="tools/CPUEmulator.sh"
+  echo "Unknown project"
 fi
 
 if [ $2 ]
@@ -23,15 +23,15 @@ if [ $assemble ]
 then
   for file in projects/$path/*.asm
   do
-    echo "Assembling..."
-    echo $file
+    echo
+    echo "Assembling $file"
     tools/Assembler.sh $file
   done
 fi
 
 for file in projects/$path/*.tst
 do
-  echo "Testing..."
-  echo $file
+  echo
+  echo "Testing $file"
   $cmd $file
 done
