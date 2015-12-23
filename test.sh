@@ -3,10 +3,14 @@ assemble=false
 if [ $1 -le 3 ]
 then
   cmd="tools/HardwareSimulator.sh"
-elif [ $1 -gt 3 ] && [ $1 -le 12 ]
+elif [ $1 -eq 4 ]
 then
   cmd="tools/CPUEmulator.sh"
   assemble=true
+elif [ $1 -eq 5 ]
+then
+  echo "Project 05 must be tested manually!"
+  exit 0
 else
   echo "Unknown project"
 fi
@@ -17,7 +21,6 @@ then
 else
   path=$1
 fi
-
 
 if [ $assemble ]
 then
