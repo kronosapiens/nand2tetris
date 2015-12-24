@@ -9,8 +9,7 @@ then
   assemble=true
 elif [ $1 -eq 5 ]
 then
-  echo "Project 05 must be tested manually!"
-  exit 0
+  cmd="tools/HardwareSimulator.sh"
 else
   echo "Unknown project"
 fi
