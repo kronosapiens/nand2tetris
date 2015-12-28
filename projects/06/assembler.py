@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 '''
 Hack Assembler
 Daniel Kronovet
@@ -38,6 +37,9 @@ class Assembler(object):
                 self.write_A(parser.symbol)
             elif parser.command_type == 'C_COMMAND':
                 self.write_C(parser.dest, parser.comp, parser.jump)
+
+        parser.close_asm()
+        self.hack.close()
 
     def prepare_files(self, asm_filename):
         assert '.asm' in asm_filename, 'Must pass .asm file!'
@@ -96,6 +98,9 @@ class Parser(object):
             line = self.asm.readline().strip()
         self.curr_instruction = line
         self.instruction_num = -1 # 0 once first instruction is parsed.
+
+    def close_asm(self):
+        self.asm.close()
 
     def is_not_instruction(self, line):
         return not line or line[:2] == '//'
@@ -259,4 +264,3 @@ if __name__ == '__main__':
     asm_filename = sys.argv[1]
     assembler = Assembler(Parser(), SymbolTable(), Code())
     assembler.assemble(asm_filename)
-    # print assembler.symbol_table.symbol_dict
