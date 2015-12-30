@@ -100,16 +100,19 @@ class CodeWriter(object):
         self.asm = open(asm_filename, 'w')
         self.curr_file = None
         self.bool_count = 0 # Number of boolean comparisons so far
+        self.addresses = self.address_dict()
 
     #######
     ### API
     def set_file_name(self, vm_filename):
-        self.curr_file = vm_filename
+        '''Reset pointers'''
+        self.curr_file = vm_filename.replace('.vm', '').split('/')[-1]
+        # self.curr_file = vm_filename.replace('.vm', '')
 
     def write_arithmetic(self, operation):
         '''Apply operation to top of stack'''
         if operation not in ['neg', 'not']: # Binary operator
-            self.pop_to_D()
+            self.pop_stack_to_D()
         self.decrement_SP()
         self.set_A_to_stack()
 
@@ -152,11 +155,20 @@ class CodeWriter(object):
         self.increment_SP()
 
     def write_push_pop(self, command, segment, index):
-        if command == 'C_PUSH':
-            self.load_address(segment, index)
-            self.push_from_D()
-        elif command == 'C_POP':
-            self.pop_to_D()
+        self.resolve_address(segment, index)
+        if command == 'C_PUSH': # load M[address] to D
+            if segment == 'constant':
+                self.write('D=A')
+            else:
+                self.write('D=M')
+            self.push_D_to_stack()
+        elif command == 'C_POP': # load D to M[address]
+            self.write('D=A')
+            self.write('@R13') # Store resolved address in R13
+            self.write('M=D')
+            self.pop_stack_to_D()
+            self.write('@R13')
+            self.write('A=M')
             self.write('M=D')
         else:
             self.raise_unknown(command)
@@ -169,26 +181,39 @@ class CodeWriter(object):
     def write(self, command):
         self.asm.write(command + '\n')
 
-    def raise_unknown(self, command):
-        raise ValueError('{} is an invalid command'.format(command))
-
-    def load_address(self, segment, index):
-        '''Resolve segment + index to address, load M[address] to D'''
-        if segment == 'constant':
-            self.write('@{}'.format(index))
-            self.write('D=A')
-        else:
-            # Resolve address
-            self.write('D=M')
-
-    def save_address(self, segment, index):
-        '''Resolve segment + index to address, load D to M[address]'''
-        pass
+    def raise_unknown(self, argument):
+        raise ValueError('{} is an invalid argument'.format(argument))
 
     def resolve_address(self, segment, index):
-        pass
+        '''Resolve address to A register'''
+        address = self.addresses.get(segment)
+        if segment == 'constant':
+            self.write('@' + str(index))
+        elif segment == 'static':
+            self.write('@' + self.curr_file + '.' + str(index))
+        elif segment in ['pointer', 'temp']:
+            self.write('@R' + str(address + int(index))) # Address is an int
+        elif segment in ['local', 'argument', 'this', 'that']:
+            self.write('@' + address) # Address is a string
+            self.write('D=M')
+            self.write('@' + str(index))
+            self.write('A=D+A') # D is segment base
+        else:
+            self.raise_unknown(segment)
 
-    def push_from_D(self):
+    def address_dict(self):
+        return {
+            'local': 'LCL', # Base R1
+            'argument': 'ARG', # Base R2
+            'this': 'THIS', # Base R3
+            'that': 'THAT', # Base R4
+            'pointer': 3, # Edit R3, R4
+            'temp': 5, # Edit R5-12
+            # R13-15 are free
+            'static': 16, # Edit R16-255
+        }
+
+    def push_D_to_stack(self):
         '''Push from D onto top of stack, increment @SP'''
         self.write('@SP') # Get current stack pointer
         self.write('A=M') # Set address to current stack pointer
@@ -196,7 +221,7 @@ class CodeWriter(object):
         self.write('@SP') # Increment SP
         self.write('M=M+1')
 
-    def pop_to_D(self):
+    def pop_stack_to_D(self):
         '''Decrement @SP, pop from top of stack onto D'''
         self.write('@SP')
         self.write('M=M-1') # Decrement SP
@@ -241,6 +266,7 @@ class Main(object):
         self.cw.set_file_name(vm_file)
         while parser.has_more_commands:
             parser.advance()
+            self.cw.write('// ' + ' '.join(parser.curr_instruction))
             if parser.command_type == 'C_PUSH':
                 self.cw.write_push_pop('C_PUSH', parser.arg1, parser.arg2)
             elif parser.command_type == 'C_POP':
