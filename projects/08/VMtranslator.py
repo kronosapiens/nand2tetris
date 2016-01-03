@@ -14,6 +14,7 @@ class Parser(object):
     def __init__(self, vm_filename):
         self.vm_filename = vm_filename
         self.vm = open(vm_filename, 'r')
+        self.EOF = False
         self.commands = self.commands_dict()
         self.curr_instruction = None
         self.initialize_file()
@@ -26,7 +27,7 @@ class Parser(object):
 
     @property
     def has_more_commands(self):
-        return bool(self.next_instruction)
+        return not self.EOF
 
     @property
     def command_type(self):
@@ -51,14 +52,18 @@ class Parser(object):
 
     def initialize_file(self):
         self.vm.seek(0)
-        line = self.vm.readline().strip()
-        while not self.is_instruction(line):
-            line = self.vm.readline().strip()
-        self.load_next_instruction(line)
+        self.load_next_instruction()
 
     def load_next_instruction(self, line=None):
-        line = line if line is not None else self.vm.readline().strip()
-        self.next_instruction = line.split(COMMENT)[0].strip().split()
+        loaded = False
+        while not loaded and not self.EOF:
+            tell = self.vm.tell()
+            line = self.vm.readline().strip()
+            if self.is_instruction(line):
+                self.next_instruction = line.split(COMMENT)[0].strip().split()
+                loaded = True
+            if tell == self.vm.tell(): # File position did not change
+                self.EOF = True
 
     def is_instruction(self, line):
         return line and line[:2] != COMMENT
@@ -110,6 +115,12 @@ class CodeWriter(object):
         '''Reset pointers'''
         self.curr_file = vm_filename.replace('.vm', '').split('/')[-1]
         # self.curr_file = vm_filename.replace('.vm', '')
+
+    def write_init(self):
+        self.write('@SP')
+        self.write('M=256')
+        self.write('@Sys.init')
+        self.write('0;JMP')
 
     def write_arithmetic(self, operation):
         '''Apply operation to top of stack'''
@@ -175,26 +186,26 @@ class CodeWriter(object):
         else:
             self.raise_unknown(command)
 
-    def write_init(self):
-        pass
-
     def write_label(self, label):
-        pass
+        self.write('({}${})'.format(self.curr_file, label))
 
     def write_goto(self, label):
-        pass
+        self.write('@{}${}'.format(self.curr_file, label))
+        self.write('0;JMP')
 
     def write_if(self, label):
-        pass
+        self.pop_stack_to_D()
+        self.write('@{}${}'.format(self.curr_file, label))
+        self.write('D;JNE')
 
-    def write_call(self, function_name, num_args):
-        pass
+    # def write_function(self, function_name, num_locals):
+    #     pass
 
-    def write_return(self):
-        pass
+    # def write_call(self, function_name, num_args):
+    #     pass
 
-    def write_function(self, function_name, num_locals):
-        pass
+    # def write_return(self):
+    #     pass
 
     ### END API
     ###########
@@ -269,6 +280,7 @@ class Main(object):
         self.parse_files(file_path)
         self.cw = CodeWriter(self.asm_file)
         for vm_file in self.vm_files:
+            # self.cw.write_init()
             self.translate(vm_file)
         self.cw.close()
 
@@ -297,6 +309,12 @@ class Main(object):
                 self.cw.write_push_pop('C_POP', parser.arg1, parser.arg2)
             elif parser.command_type == 'C_ARITHMETIC':
                 self.cw.write_arithmetic(parser.arg1)
+            elif parser.command_type == 'C_LABEL':
+                self.cw.write_label(parser.arg1)
+            elif parser.command_type == 'C_GOTO':
+                self.cw.write_goto(parser.arg1)
+            elif parser.command_type == 'C_IF':
+                self.cw.write_if(parser.arg1)
         parser.close()
 
 
