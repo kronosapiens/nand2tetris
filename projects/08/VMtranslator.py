@@ -107,6 +107,7 @@ class CodeWriter(object):
         self.asm = open(asm_filename, 'w')
         self.curr_file = None
         self.addresses = self.address_dict()
+        self.line_count = 0
         self.bool_count = 0 # Number of boolean comparisons so far
         self.call_count = 0 # Number of function calls so far
 
@@ -125,8 +126,8 @@ class CodeWriter(object):
         '''Reset pointers'''
         self.curr_file = vm_filename.replace('.vm', '').split('/')[-1]
         # self.curr_file = vm_filename.replace('.vm', '')
-        self.write('//////')
-        self.write('// {}'.format(self.curr_file))
+        self.write('//////', code=False)
+        self.write('// {}'.format(self.curr_file), code=False)
 
     def write_arithmetic(self, operation):
         '''Apply operation to top of stack'''
@@ -163,11 +164,11 @@ class CodeWriter(object):
             self.write('@ENDBOOL{}'.format(self.bool_count))
             self.write('0;JMP')
 
-            self.write('(BOOL{})'.format(self.bool_count))
+            self.write('(BOOL{})'.format(self.bool_count), code=False)
             self.set_A_to_stack()
             self.write('M=-1') # True
 
-            self.write('(ENDBOOL{})'.format(self.bool_count))
+            self.write('(ENDBOOL{})'.format(self.bool_count), code=False)
             self.bool_count += 1
         else:
             self.raise_unknown(operation)
@@ -193,7 +194,7 @@ class CodeWriter(object):
             self.raise_unknown(command)
 
     def write_label(self, label):
-        self.write('({}${})'.format(self.curr_file, label))
+        self.write('({}${})'.format(self.curr_file, label), code=False)
 
     def write_goto(self, label):
         self.write('@{}${}'.format(self.curr_file, label))
@@ -206,7 +207,7 @@ class CodeWriter(object):
 
     def write_function(self, function_name, num_locals):
         # (f)
-        self.write('({})'.format(function_name))
+        self.write('({})'.format(function_name), code=False)
 
         # k times: push 0
         for _ in xrange(num_locals): # Initialize local vars to 0
@@ -238,8 +239,8 @@ class CodeWriter(object):
         self.write('M=D')
 
         # ARG = SP-n-5
-        self.write('@SP') # Redundant b/c of prev two commands
-        self.write('D=M') # Redundant b/c of prev two commands
+        # self.write('@SP') # Redundant b/c of prev two commands
+        # self.write('D=M') # Redundant b/c of prev two commands
         self.write('@' + str(num_args + 5))
         self.write('D=D-A')
         self.write('@ARG')
@@ -250,7 +251,7 @@ class CodeWriter(object):
         self.write('0;JMP')
 
         # (return_address)
-        self.write('({})'.format(RET))
+        self.write('({})'.format(RET), code=False)
 
     def write_return(self):
         # Temporary variables
@@ -262,6 +263,17 @@ class CodeWriter(object):
         self.write('D=M')
         self.write('@' + FRAME)
         self.write('M=D')
+
+        # RET = *(FRAME-5)
+        # Can't be included in iterator b/c value will be overwritten if num_args=0
+        self.write('@' + FRAME)
+        self.write('D=M') # Save start of frame
+        self.write('@5')
+        self.write('D=D-A') # Adjust address
+        self.write('A=D') # Prepare to load value at address
+        self.write('D=M') # Store value
+        self.write('@' + RET)
+        self.write('M=D') # Save value
 
         # *ARG = pop()
         self.pop_stack_to_D()
@@ -279,16 +291,15 @@ class CodeWriter(object):
         # THIS = *(FRAME-2)
         # ARG = *(FRAME-3)
         # LCL = *(FRAME-4)
-        # RET = *(FRAME-5)
         offset = 1
-        for address in ['THAT', 'THIS', 'ARG', 'LCL', RET]:
+        for address in ['@THAT', '@THIS', '@ARG', '@LCL']:
             self.write('@' + FRAME)
             self.write('D=M') # Save start of frame
             self.write('@' + str(offset))
             self.write('D=D-A') # Adjust address
             self.write('A=D') # Prepare to load value at address
             self.write('D=M') # Store value
-            self.write('@' + address)
+            self.write(address)
             self.write('M=D') # Save value
             offset += 1
 
@@ -299,8 +310,12 @@ class CodeWriter(object):
 
     ### END API
     ###########
-    def write(self, command):
-        self.asm.write(command + '\n')
+    def write(self, command, code=True):
+        self.asm.write(command)
+        if code:
+            self.asm.write(' // ' + str(self.line_count))
+            self.line_count += 1
+        self.asm.write('\n')
 
     def close(self):
         self.asm.close()
@@ -390,7 +405,7 @@ class Main(object):
         self.cw.set_file_name(vm_file)
         while parser.has_more_commands:
             parser.advance()
-            self.cw.write('// ' + ' '.join(parser.curr_instruction))
+            self.cw.write('// ' + ' '.join(parser.curr_instruction), code=False)
             if parser.command_type == 'C_PUSH':
                 self.cw.write_push_pop('C_PUSH', parser.arg1, int(parser.arg2))
             elif parser.command_type == 'C_POP':

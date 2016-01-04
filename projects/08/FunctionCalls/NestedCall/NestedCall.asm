@@ -1,370 +1,364 @@
-@256
-D=A
-@SP
-M=D
-@Sys.initRET0
-D=A
-@SP
-A=M
-M=D
-@SP
-M=M+1
-@LCL
-D=M
-@SP
-A=M
-M=D
-@SP
-M=M+1
-@ARG
-D=M
-@SP
-A=M
-M=D
-@SP
-M=M+1
-@THIS
-D=M
-@SP
-A=M
-M=D
-@SP
-M=M+1
-@THAT
-D=M
-@SP
-A=M
-M=D
-@SP
-M=M+1
-@SP
-D=M
-@LCL
-M=D
-@SP
-D=M
-@5
-D=D-A
-@ARG
-M=D
-@Sys.init
-0;JMP
+@256 // 0
+D=A // 1
+@SP // 2
+M=D // 3
+@Sys.initRET0 // 4
+D=A // 5
+@SP // 6
+A=M // 7
+M=D // 8
+@SP // 9
+M=M+1 // 10
+@LCL // 11
+D=M // 12
+@SP // 13
+A=M // 14
+M=D // 15
+@SP // 16
+M=M+1 // 17
+@ARG // 18
+D=M // 19
+@SP // 20
+A=M // 21
+M=D // 22
+@SP // 23
+M=M+1 // 24
+@THIS // 25
+D=M // 26
+@SP // 27
+A=M // 28
+M=D // 29
+@SP // 30
+M=M+1 // 31
+@THAT // 32
+D=M // 33
+@SP // 34
+A=M // 35
+M=D // 36
+@SP // 37
+M=M+1 // 38
+@SP // 39
+D=M // 40
+@LCL // 41
+M=D // 42
+@5 // 43
+D=D-A // 44
+@ARG // 45
+M=D // 46
+@Sys.init // 47
+0;JMP // 48
 (Sys.initRET0)
 //////
 // Sys
 // function Sys.init 0
 (Sys.init)
 // call Sys.main 0
-@Sys.mainRET1
-D=A
-@SP
-A=M
-M=D
-@SP
-M=M+1
-@LCL
-D=M
-@SP
-A=M
-M=D
-@SP
-M=M+1
-@ARG
-D=M
-@SP
-A=M
-M=D
-@SP
-M=M+1
-@THIS
-D=M
-@SP
-A=M
-M=D
-@SP
-M=M+1
-@THAT
-D=M
-@SP
-A=M
-M=D
-@SP
-M=M+1
-@SP
-D=M
-@LCL
-M=D
-@SP
-D=M
-@5
-D=D-A
-@ARG
-M=D
-@Sys.main
-0;JMP
+@Sys.mainRET1 // 49
+D=A // 50
+@SP // 51
+A=M // 52
+M=D // 53
+@SP // 54
+M=M+1 // 55
+@LCL // 56
+D=M // 57
+@SP // 58
+A=M // 59
+M=D // 60
+@SP // 61
+M=M+1 // 62
+@ARG // 63
+D=M // 64
+@SP // 65
+A=M // 66
+M=D // 67
+@SP // 68
+M=M+1 // 69
+@THIS // 70
+D=M // 71
+@SP // 72
+A=M // 73
+M=D // 74
+@SP // 75
+M=M+1 // 76
+@THAT // 77
+D=M // 78
+@SP // 79
+A=M // 80
+M=D // 81
+@SP // 82
+M=M+1 // 83
+@SP // 84
+D=M // 85
+@LCL // 86
+M=D // 87
+@5 // 88
+D=D-A // 89
+@ARG // 90
+M=D // 91
+@Sys.main // 92
+0;JMP // 93
 (Sys.mainRET1)
 // pop temp 1
-@R6
-D=A
-@R13
-M=D
-@SP
-M=M-1
-A=M
-D=M
-@R13
-A=M
-M=D
+@R6 // 94
+D=A // 95
+@R13 // 96
+M=D // 97
+@SP // 98
+M=M-1 // 99
+A=M // 100
+D=M // 101
+@R13 // 102
+A=M // 103
+M=D // 104
 // label LOOP
 (Sys$LOOP)
 // goto LOOP
-@Sys$LOOP
-0;JMP
+@Sys$LOOP // 105
+0;JMP // 106
 // function Sys.main 0
 (Sys.main)
 // push constant 123
-@123
-D=A
-@SP
-A=M
-M=D
-@SP
-M=M+1
+@123 // 107
+D=A // 108
+@SP // 109
+A=M // 110
+M=D // 111
+@SP // 112
+M=M+1 // 113
 // call Sys.add12 1
-@Sys.add12RET2
-D=A
-@SP
-A=M
-M=D
-@SP
-M=M+1
-@LCL
-D=M
-@SP
-A=M
-M=D
-@SP
-M=M+1
-@ARG
-D=M
-@SP
-A=M
-M=D
-@SP
-M=M+1
-@THIS
-D=M
-@SP
-A=M
-M=D
-@SP
-M=M+1
-@THAT
-D=M
-@SP
-A=M
-M=D
-@SP
-M=M+1
-@SP
-D=M
-@LCL
-M=D
-@SP
-D=M
-@6
-D=D-A
-@ARG
-M=D
-@Sys.add12
-0;JMP
+@Sys.add12RET2 // 114
+D=A // 115
+@SP // 116
+A=M // 117
+M=D // 118
+@SP // 119
+M=M+1 // 120
+@LCL // 121
+D=M // 122
+@SP // 123
+A=M // 124
+M=D // 125
+@SP // 126
+M=M+1 // 127
+@ARG // 128
+D=M // 129
+@SP // 130
+A=M // 131
+M=D // 132
+@SP // 133
+M=M+1 // 134
+@THIS // 135
+D=M // 136
+@SP // 137
+A=M // 138
+M=D // 139
+@SP // 140
+M=M+1 // 141
+@THAT // 142
+D=M // 143
+@SP // 144
+A=M // 145
+M=D // 146
+@SP // 147
+M=M+1 // 148
+@SP // 149
+D=M // 150
+@LCL // 151
+M=D // 152
+@6 // 153
+D=D-A // 154
+@ARG // 155
+M=D // 156
+@Sys.add12 // 157
+0;JMP // 158
 (Sys.add12RET2)
 // pop temp 0
-@R5
-D=A
-@R13
-M=D
-@SP
-M=M-1
-A=M
-D=M
-@R13
-A=M
-M=D
+@R5 // 159
+D=A // 160
+@R13 // 161
+M=D // 162
+@SP // 163
+M=M-1 // 164
+A=M // 165
+D=M // 166
+@R13 // 167
+A=M // 168
+M=D // 169
 // push constant 246
-@246
-D=A
-@SP
-A=M
-M=D
-@SP
-M=M+1
+@246 // 170
+D=A // 171
+@SP // 172
+A=M // 173
+M=D // 174
+@SP // 175
+M=M+1 // 176
 // return
-@LCL
-D=M
-@R13
-M=D
-@SP
-M=M-1
-A=M
-D=M
-@ARG
-A=M
-M=D
-@ARG
-D=M
-@SP
-M=D+1
-@R13
-D=M
-@1
-D=D-A
-A=D
-D=M
-@THAT
-M=D
-@R13
-D=M
-@2
-D=D-A
-A=D
-D=M
-@THIS
-M=D
-@R13
-D=M
-@3
-D=D-A
-A=D
-D=M
-@ARG
-M=D
-@R13
-D=M
-@4
-D=D-A
-A=D
-D=M
-@LCL
-M=D
-@R13
-D=M
-@5
-D=D-A
-A=D
-D=M
-@R14
-M=D
-@R14
-A=M
-0;JMP
+@LCL // 177
+D=M // 178
+@R13 // 179
+M=D // 180
+@R13 // 181
+D=M // 182
+@5 // 183
+D=D-A // 184
+A=D // 185
+D=M // 186
+@R14 // 187
+M=D // 188
+@SP // 189
+M=M-1 // 190
+A=M // 191
+D=M // 192
+@ARG // 193
+A=M // 194
+M=D // 195
+@ARG // 196
+D=M // 197
+@SP // 198
+M=D+1 // 199
+@R13 // 200
+D=M // 201
+@1 // 202
+D=D-A // 203
+A=D // 204
+D=M // 205
+@THAT // 206
+M=D // 207
+@R13 // 208
+D=M // 209
+@2 // 210
+D=D-A // 211
+A=D // 212
+D=M // 213
+@THIS // 214
+M=D // 215
+@R13 // 216
+D=M // 217
+@3 // 218
+D=D-A // 219
+A=D // 220
+D=M // 221
+@ARG // 222
+M=D // 223
+@R13 // 224
+D=M // 225
+@4 // 226
+D=D-A // 227
+A=D // 228
+D=M // 229
+@LCL // 230
+M=D // 231
+@R14 // 232
+A=M // 233
+0;JMP // 234
 // function Sys.add12 3
 (Sys.add12)
-D=0
-@SP
-A=M
-M=D
-@SP
-M=M+1
-D=0
-@SP
-A=M
-M=D
-@SP
-M=M+1
-D=0
-@SP
-A=M
-M=D
-@SP
-M=M+1
+D=0 // 235
+@SP // 236
+A=M // 237
+M=D // 238
+@SP // 239
+M=M+1 // 240
+D=0 // 241
+@SP // 242
+A=M // 243
+M=D // 244
+@SP // 245
+M=M+1 // 246
+D=0 // 247
+@SP // 248
+A=M // 249
+M=D // 250
+@SP // 251
+M=M+1 // 252
 // push argument 0
-@ARG
-D=M
-@0
-A=D+A
-D=M
-@SP
-A=M
-M=D
-@SP
-M=M+1
+@ARG // 253
+D=M // 254
+@0 // 255
+A=D+A // 256
+D=M // 257
+@SP // 258
+A=M // 259
+M=D // 260
+@SP // 261
+M=M+1 // 262
 // push constant 12
-@12
-D=A
-@SP
-A=M
-M=D
-@SP
-M=M+1
+@12 // 263
+D=A // 264
+@SP // 265
+A=M // 266
+M=D // 267
+@SP // 268
+M=M+1 // 269
 // add
-@SP
-M=M-1
-A=M
-D=M
-@SP
-M=M-1
-@SP
-A=M
-M=M+D
-@SP
-M=M+1
+@SP // 270
+M=M-1 // 271
+A=M // 272
+D=M // 273
+@SP // 274
+M=M-1 // 275
+@SP // 276
+A=M // 277
+M=M+D // 278
+@SP // 279
+M=M+1 // 280
 // return
-@LCL
-D=M
-@R13
-M=D
-@SP
-M=M-1
-A=M
-D=M
-@ARG
-A=M
-M=D
-@ARG
-D=M
-@SP
-M=D+1
-@R13
-D=M
-@1
-D=D-A
-A=D
-D=M
-@THAT
-M=D
-@R13
-D=M
-@2
-D=D-A
-A=D
-D=M
-@THIS
-M=D
-@R13
-D=M
-@3
-D=D-A
-A=D
-D=M
-@ARG
-M=D
-@R13
-D=M
-@4
-D=D-A
-A=D
-D=M
-@LCL
-M=D
-@R13
-D=M
-@5
-D=D-A
-A=D
-D=M
-@R14
-M=D
-@R14
-A=M
-0;JMP
+@LCL // 281
+D=M // 282
+@R13 // 283
+M=D // 284
+@R13 // 285
+D=M // 286
+@5 // 287
+D=D-A // 288
+A=D // 289
+D=M // 290
+@R14 // 291
+M=D // 292
+@SP // 293
+M=M-1 // 294
+A=M // 295
+D=M // 296
+@ARG // 297
+A=M // 298
+M=D // 299
+@ARG // 300
+D=M // 301
+@SP // 302
+M=D+1 // 303
+@R13 // 304
+D=M // 305
+@1 // 306
+D=D-A // 307
+A=D // 308
+D=M // 309
+@THAT // 310
+M=D // 311
+@R13 // 312
+D=M // 313
+@2 // 314
+D=D-A // 315
+A=D // 316
+D=M // 317
+@THIS // 318
+M=D // 319
+@R13 // 320
+D=M // 321
+@3 // 322
+D=D-A // 323
+A=D // 324
+D=M // 325
+@ARG // 326
+M=D // 327
+@R13 // 328
+D=M // 329
+@4 // 330
+D=D-A // 331
+A=D // 332
+D=M // 333
+@LCL // 334
+M=D // 335
+@R14 // 336
+A=M // 337
+0;JMP // 338
