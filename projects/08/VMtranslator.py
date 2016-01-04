@@ -106,21 +106,27 @@ class CodeWriter(object):
     def __init__(self, asm_filename):
         self.asm = open(asm_filename, 'w')
         self.curr_file = None
-        self.bool_count = 0 # Number of boolean comparisons so far
         self.addresses = self.address_dict()
+        self.bool_count = 0 # Number of boolean comparisons so far
+        self.call_count = 0 # Number of function calls so far
 
     #######
     ### API
+    def write_init(self):
+        self.write('@256')
+        self.write('D=A')
+        self.write('@SP')
+        self.write('M=D')
+        self.write_call('Sys.init', 0)
+        # self.write('@Sys.init')
+        # self.write('0;JMP')
+
     def set_file_name(self, vm_filename):
         '''Reset pointers'''
         self.curr_file = vm_filename.replace('.vm', '').split('/')[-1]
         # self.curr_file = vm_filename.replace('.vm', '')
-
-    def write_init(self):
-        self.write('@SP')
-        self.write('M=256')
-        self.write('@Sys.init')
-        self.write('0;JMP')
+        self.write('//////')
+        self.write('// {}'.format(self.curr_file))
 
     def write_arithmetic(self, operation):
         '''Apply operation to top of stack'''
@@ -198,14 +204,98 @@ class CodeWriter(object):
         self.write('@{}${}'.format(self.curr_file, label))
         self.write('D;JNE')
 
-    # def write_function(self, function_name, num_locals):
-    #     pass
+    def write_function(self, function_name, num_locals):
+        # (f)
+        self.write('({})'.format(function_name))
 
-    # def write_call(self, function_name, num_args):
-    #     pass
+        # k times: push 0
+        for _ in xrange(num_locals): # Initialize local vars to 0
+            self.write('D=0')
+            self.push_D_to_stack()
 
-    # def write_return(self):
-    #     pass
+    def write_call(self, function_name, num_args):
+        RET = function_name + 'RET' +  str(self.call_count) # Unique return label
+        self.call_count += 1
+
+        # push return-address
+        self.write('@' + RET)
+        self.write('D=A')
+        self.push_D_to_stack()
+
+        # push LCL
+        # push ARG
+        # push THIS
+        # push THAT
+        for address in ['@LCL', '@ARG', '@THIS', '@THAT']:
+            self.write(address)
+            self.write('D=M')
+            self.push_D_to_stack()
+
+        # LCL = SP
+        self.write('@SP')
+        self.write('D=M')
+        self.write('@LCL')
+        self.write('M=D')
+
+        # ARG = SP-n-5
+        self.write('@SP') # Redundant b/c of prev two commands
+        self.write('D=M') # Redundant b/c of prev two commands
+        self.write('@' + str(num_args + 5))
+        self.write('D=D-A')
+        self.write('@ARG')
+        self.write('M=D')
+
+        # goto f
+        self.write('@' + function_name)
+        self.write('0;JMP')
+
+        # (return_address)
+        self.write('({})'.format(RET))
+
+    def write_return(self):
+        # Temporary variables
+        FRAME = 'R13'
+        RET = 'R14'
+
+        # FRAME = LCL
+        self.write('@LCL')
+        self.write('D=M')
+        self.write('@' + FRAME)
+        self.write('M=D')
+
+        # *ARG = pop()
+        self.pop_stack_to_D()
+        self.write('@ARG')
+        self.write('A=M')
+        self.write('M=D')
+
+        # SP = ARG+1
+        self.write('@ARG')
+        self.write('D=M')
+        self.write('@SP')
+        self.write('M=D+1')
+
+        # THAT = *(FRAME-1)
+        # THIS = *(FRAME-2)
+        # ARG = *(FRAME-3)
+        # LCL = *(FRAME-4)
+        # RET = *(FRAME-5)
+        offset = 1
+        for address in ['THAT', 'THIS', 'ARG', 'LCL', RET]:
+            self.write('@' + FRAME)
+            self.write('D=M') # Save start of frame
+            self.write('@' + str(offset))
+            self.write('D=D-A') # Adjust address
+            self.write('A=D') # Prepare to load value at address
+            self.write('D=M') # Store value
+            self.write('@' + address)
+            self.write('M=D') # Save value
+            offset += 1
+
+        # goto RET
+        self.write('@' + RET)
+        self.write('A=M')
+        self.write('0;JMP')
 
     ### END API
     ###########
@@ -226,7 +316,7 @@ class CodeWriter(object):
         elif segment == 'static':
             self.write('@' + self.curr_file + '.' + str(index))
         elif segment in ['pointer', 'temp']:
-            self.write('@R' + str(address + int(index))) # Address is an int
+            self.write('@R' + str(address + index)) # Address is an int
         elif segment in ['local', 'argument', 'this', 'that']:
             self.write('@' + address) # Address is a string
             self.write('D=M')
@@ -252,13 +342,11 @@ class CodeWriter(object):
         self.write('@SP') # Get current stack pointer
         self.write('A=M') # Set address to current stack pointer
         self.write('M=D') # Write data to top of stack
-        self.write('@SP') # Increment SP
-        self.write('M=M+1')
+        self.increment_SP()
 
     def pop_stack_to_D(self):
         '''Decrement @SP, pop from top of stack onto D'''
-        self.write('@SP')
-        self.write('M=M-1') # Decrement SP
+        self.decrement_SP()
         self.write('A=M') # Set address to current stack pointer
         self.write('D=M') # Get data from top of stack
 
@@ -279,8 +367,8 @@ class Main(object):
     def __init__(self, file_path):
         self.parse_files(file_path)
         self.cw = CodeWriter(self.asm_file)
+        self.cw.write_init()
         for vm_file in self.vm_files:
-            # self.cw.write_init()
             self.translate(vm_file)
         self.cw.close()
 
@@ -304,9 +392,9 @@ class Main(object):
             parser.advance()
             self.cw.write('// ' + ' '.join(parser.curr_instruction))
             if parser.command_type == 'C_PUSH':
-                self.cw.write_push_pop('C_PUSH', parser.arg1, parser.arg2)
+                self.cw.write_push_pop('C_PUSH', parser.arg1, int(parser.arg2))
             elif parser.command_type == 'C_POP':
-                self.cw.write_push_pop('C_POP', parser.arg1, parser.arg2)
+                self.cw.write_push_pop('C_POP', parser.arg1, int(parser.arg2))
             elif parser.command_type == 'C_ARITHMETIC':
                 self.cw.write_arithmetic(parser.arg1)
             elif parser.command_type == 'C_LABEL':
@@ -315,6 +403,12 @@ class Main(object):
                 self.cw.write_goto(parser.arg1)
             elif parser.command_type == 'C_IF':
                 self.cw.write_if(parser.arg1)
+            elif parser.command_type == 'C_FUNCTION':
+                self.cw.write_function(parser.arg1, int(parser.arg2))
+            elif parser.command_type == 'C_CALL':
+                self.cw.write_call(parser.arg1, int(parser.arg2))
+            elif parser.command_type == 'C_RETURN':
+                self.cw.write_return()
         parser.close()
 
 
