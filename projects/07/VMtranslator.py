@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 '''
-Hack Assembler
+VM Translator
 Daniel Kronovet
 kronovet@gmail.com
 '''
