@@ -31,15 +31,18 @@ class JackAnalyzer(object):
         ce = CompilationEngine(jack_file)
         while tokenizer.has_more_tokens():
             tokenizer.advance()
-            ce.write('<' + tokenizer.token_type.lower() + '>')
-            token = tokenizer.curr_token
-            token = token.replace('&', '&amp;')
-            token = token.replace('<', '&lt;')
-            token = token.replace('>', '&gt;')
-            ce.write(token)
-            ce.write('</' + tokenizer.token_type.lower() + '>\n')
-        ce.close()
+            if tokenizer.token_type == 'KEYWORD':
 
+                ce.write_token('keyword', tokenizer.curr_token)
+            elif tokenizer.token_type == 'SYMBOL':
+                ce.write_token('symbol', tokenizer.curr_token)
+            elif tokenizer.token_type == 'INT_CONSTANT':
+                ce.write_token('integerConstant', str(tokenizer.curr_token))
+            elif tokenizer.token_type == 'STRING_CONSTANT':
+                ce.write_token('stringConstant', tokenizer.curr_token)
+            elif tokenizer.token_type == 'IDENTIFIER':
+                ce.write_token('identifier', tokenizer.curr_token)
+        ce.close()
 
 class JackTokenizer(object):
     #######
@@ -220,9 +223,12 @@ class CompilationEngine(object):
         filename_pieces[-1] = 'My' + filename_pieces[-1] # Avoid overwriting original file
         xml_filename = '/'.join(filename_pieces).replace('.jack', '.xml')
         self.xml = open(xml_filename, 'w')
+        self.indent = 0
         self.write('<tokens>\n')
+        self.updent()
 
     def compile_class(self):
+
         pass
 
     def compile_class_var_dec(self):
@@ -270,9 +276,24 @@ class CompilationEngine(object):
     def write(self, content):
         self.xml.write(content)
 
+    def write_token(self, token_type, token):
+        token = token.replace('&', '&amp;')
+        token = token.replace('<', '&lt;')
+        token = token.replace('>', '&gt;')
+        self.write(' ' * self.indent + '<' + token_type.lower() + '> ')
+        self.write(token)
+        self.write(' </' + token_type.lower() + '>\n')
+
     def close(self):
+        self.downdent()
         self.write('</tokens>')
         self.xml.close()
+
+    def updent(self):
+        self.indent += 2
+
+    def downdent(self):
+        self.indent -= 2
 
 
 if __name__ == '__main__':
