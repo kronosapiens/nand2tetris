@@ -31,8 +31,15 @@ class JackAnalyzer(object):
         ce = CompilationEngine(jack_file)
         while tokenizer.has_more_tokens():
             tokenizer.advance()
-            print tokenizer.token_type, tokenizer.curr_token
-            # Do stuff with ce
+            ce.write('<' + tokenizer.token_type.lower() + '>')
+            token = tokenizer.curr_token
+            token = token.replace('&', '&amp;')
+            token = token.replace('<', '&lt;')
+            token = token.replace('>', '&gt;')
+            ce.write(token)
+            ce.write('</' + tokenizer.token_type.lower() + '>\n')
+        ce.close()
+
 
 class JackTokenizer(object):
     #######
@@ -86,7 +93,7 @@ class JackTokenizer(object):
             int_idx = 0
             while self.is_int(next_token[:int_idx+1]):
                 int_idx += 1
-            self.curr_token = int(next_token[:int_idx])
+            self.curr_token = next_token[:int_idx]
             if next_token[int_idx:]:
                 self.jack.appendleft(next_token[int_idx:])
             return
@@ -117,7 +124,7 @@ class JackTokenizer(object):
         return self.curr_token
 
     def int_val(self):
-        return self.curr_token
+        return int(self.curr_token)
 
     def string_val(self):
         return self.curr_token
@@ -134,7 +141,6 @@ class JackTokenizer(object):
         in_comment = False
         for i, line in enumerate(contents):
             start, end = line[:2], line[-2:]
-            print i, line
             if start == '/*':
                 in_comment = True
 
@@ -214,6 +220,7 @@ class CompilationEngine(object):
         filename_pieces[-1] = 'My' + filename_pieces[-1] # Avoid overwriting original file
         xml_filename = '/'.join(filename_pieces).replace('.jack', '.xml')
         self.xml = open(xml_filename, 'w')
+        self.write('<tokens>\n')
 
     def compile_class(self):
         pass
@@ -260,7 +267,11 @@ class CompilationEngine(object):
     ### END API
     ###########
 
+    def write(self, content):
+        self.xml.write(content)
+
     def close(self):
+        self.write('</tokens>')
         self.xml.close()
 
 
