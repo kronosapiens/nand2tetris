@@ -6,52 +6,212 @@ kronovet@gmail.com
 '''
 
 import os
+from collections import deque
 
 
 class JackAnalyzer(object):
-    def __init__(self):
-        pass
+    def __init__(self, file_path):
+        jack_files = self.parse_files(file_path)
+        for jack_file in jack_files:
+            self.analyze(jack_file)
 
+    def parse_files(self, file_path):
+        if '.jack' in file_path:
+            return [file_path]
+        else:
+            file_path = file_path[:-1] if file_path[-1] == '/' else file_path
+            # path_elements = file_path.split('/')
+            # path = '/'.join(path_elements)
+            dirpath, dirnames, filenames = next(os.walk(file_path), [[],[],[]])
+            jack_files = filter(lambda x: '.jack' in x, filenames)
+            return [file_path + '/' +  jack_file for jack_file in jack_files]
+
+    def analyze(self, jack_file):
+        tokenizer = JackTokenizer(jack_file)
+        ce = CompilationEngine(jack_file)
+        while tokenizer.has_more_tokens():
+            tokenizer.advance()
+            print tokenizer.token_type, tokenizer.curr_token
+            # Do stuff with ce
 
 class JackTokenizer(object):
     #######
     ### API
-    def __init__(self):
-        pass
+    def __init__(self, jack_filename):
+        self.jack_filename = jack_filename
+        self.jack = self.load_file(self.jack_filename)
+        self.curr_token = None
+        self.token_type = None
+        self.keywords = self.keyword_dict()
+        self.symbols = self.symbol_set()
 
     def has_more_tokens(self):
-        pass
+        return self.jack
 
     def advance(self):
-        pass
+        next_token = self.jack.popleft()
+
+        # Keyword
+        if next_token in self.keywords:
+            self.token_type = 'KEYWORD'
+            self.curr_token = next_token
+            return
+
+        # Symbol
+        if next_token[0] in self.symbols:
+            self.token_type = 'SYMBOL'
+            if len(next_token) >= 2 and next_token[:2] in ['++', '<=', '>=']:
+                self.curr_token = next_token[:2]
+                if next_token[2:]:
+                    self.jack.appendleft(next_token[2:])
+            else:
+                self.curr_token = next_token[0]
+                if next_token[1:]:
+                    self.jack.appendleft(next_token[1:])
+            return
+
+        # String Constant
+        if next_token[0] == '"':
+            for i, el in enumerate(next_token[1:]):
+                if el == '"':
+                    self.token_type = 'STRING_CONSTANT'
+                    self.curr_token = next_token[1:i]
+                    self.jack.appendleft(next_token[i:])
+                    return
+            raise SyntaxError('Invalid String Constant: {}'.format(next_token))
+
+        # Integer Constant
+        if self.is_int(next_token[0]):
+            self.token_type = 'INT_CONSTANT'
+            int_idx = 0
+            while self.is_int(next_token[:int_idx+1]):
+                int_idx += 1
+            self.curr_token = int(next_token[:int_idx])
+            if next_token[int_idx:]:
+                self.jack.appendleft(next_token[int_idx:])
+            return
+
+        # Identifier
+        # Need to check for trailing symbol
+        self.token_type = 'IDENTIFIER'
+        for i, el in enumerate(next_token):
+            if el in self.symbols:
+                self.curr_token = next_token[:i]
+                self.jack.appendleft(next_token[i:])
+                return
+        self.curr_token = next_token
 
     def token_type(self):
-        pass
+        return self.token_type
 
     def key_word(self):
-        pass
+        return self.keywords[self.curr_token]
 
     def symbol(self):
-        pass
+        return self.curr_token
 
     def identifier(self):
-        pass
+        return self.curr_token
 
     def int_val(self):
-        pass
+        return self.curr_token
 
     def string_val(self):
-        pass
+        return self.curr_token
 
     ### END API
     ###########
+
+    def load_file(self, jack_filename):
+        with open(jack_filename, 'r') as f:
+            contents = f.read()
+        contents = contents.split('\n')
+        contents = [l.strip() for l in contents]
+        contents = [l.split('//')[0] for l in contents]
+        in_comment = False
+        for i, line in enumerate(contents):
+            start, end = line[:2], line[-2:]
+            print i, line
+            if start == '/*':
+                in_comment = True
+
+            if in_comment:
+                contents[i] = ''
+
+            if start == '*/' or end == '*/':
+                in_comment = False
+        words = []
+        for line in contents:
+            words.extend(line.split())
+        words = [l for l in words if l]
+        return deque(words)
+
+    def is_int(self, string):
+        try:
+            int(string)
+            return True
+        except ValueError:
+            return False
+
+
+    def keyword_dict(self):
+        return {
+            'class': 'CLASS',
+            'constructor': 'CONSTRUCTOR',
+            'function': 'FUNCTION',
+            'method': 'METHOD',
+            'field': 'FIELD',
+            'static': 'STATIC',
+            'var': 'VAR',
+            'int': 'INT',
+            'char': 'CHAR',
+            'boolean': 'BOOLEAN',
+            'void': 'VOID',
+            'true': 'TRUE',
+            'false': 'FALSE',
+            'null': 'NULL',
+            'this': 'THIS',
+            'let': 'LET',
+            'do': 'DO',
+            'if': 'IF',
+            'else': 'ELSE',
+            'while': 'WHILE',
+            'return': 'RETURN'
+        }
+
+    def symbol_set(self):
+        return set([
+            '{',
+            '}',
+            '(',
+            ')',
+            '[',
+            ']',
+            '.',
+            ',',
+            ';',
+            '+',
+            '-',
+            '*',
+            '/',
+            '&',
+            '|',
+            '<',
+            '>',
+            '=',
+            '~',
+        ])
+
 
 
 class CompilationEngine(object):
     #######
     ### API
-    def __init__(self):
-        pass
+    def __init__(self, jack_filename):
+        filename_pieces = jack_filename.split('/')
+        filename_pieces[-1] = 'My' + filename_pieces[-1] # Avoid overwriting original file
+        xml_filename = '/'.join(filename_pieces).replace('.jack', '.xml')
+        self.xml = open(xml_filename, 'w')
 
     def compile_class(self):
         pass
@@ -98,9 +258,12 @@ class CompilationEngine(object):
     ### END API
     ###########
 
+    def close(self):
+        self.xml.close()
+
 
 if __name__ == '__main__':
     import sys
 
     file_path = sys.argv[1]
-    Main(file_path)
+    JackAnalyzer(file_path)
