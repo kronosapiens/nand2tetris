@@ -51,12 +51,6 @@ class JackTokenizer(object):
     def advance(self):
         next_token = self.jack.popleft()
 
-        # Keyword
-        if next_token in self.keywords:
-            self.token_type = 'KEYWORD'
-            self.curr_token = next_token
-            return
-
         # Symbol
         if next_token[0] in self.symbols:
             self.token_type = 'SYMBOL'
@@ -72,13 +66,19 @@ class JackTokenizer(object):
 
         # String Constant
         if next_token[0] == '"':
-            for i, el in enumerate(next_token[1:]):
-                if el == '"':
-                    self.token_type = 'STRING_CONSTANT'
-                    self.curr_token = next_token[1:i]
-                    self.jack.appendleft(next_token[i:])
-                    return
-            raise SyntaxError('Invalid String Constant: {}'.format(next_token))
+            self.token_type = 'STRING_CONSTANT'
+            curr_string = next_token[1:]
+            full_string = ''
+            while True:
+                for i, el in enumerate(curr_string):
+                    if el == '"':
+                        full_string += curr_string[:i]
+                        if curr_string[i+1:]:
+                            self.jack.appendleft(curr_string[i+1:])
+                        self.curr_token = full_string.strip()
+                        return
+                full_string += curr_string + ' '
+                curr_string = self.jack.popleft()
 
         # Integer Constant
         if self.is_int(next_token[0]):
@@ -91,15 +91,18 @@ class JackTokenizer(object):
                 self.jack.appendleft(next_token[int_idx:])
             return
 
-        # Identifier
+        # Identifier or Keyword
         # Need to check for trailing symbol
-        self.token_type = 'IDENTIFIER'
+        self.curr_token = next_token
         for i, el in enumerate(next_token):
             if el in self.symbols:
                 self.curr_token = next_token[:i]
                 self.jack.appendleft(next_token[i:])
-                return
-        self.curr_token = next_token
+                break
+        if self.curr_token in self.keywords:
+            self.token_type = 'KEYWORD'
+        else:
+            self.token_type = 'IDENTIFIER'
 
     def token_type(self):
         return self.token_type
@@ -152,7 +155,6 @@ class JackTokenizer(object):
             return True
         except ValueError:
             return False
-
 
     def keyword_dict(self):
         return {
